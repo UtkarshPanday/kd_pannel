@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kd_pannel/core/theme/app_theme.dart';
 
 class TopbarWidget extends StatelessWidget {
   const TopbarWidget({super.key});
@@ -6,155 +7,108 @@ class TopbarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      height: 70, // Matches Sidebar Header height
+      width: double.infinity,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardColor,
         border: Border(
           bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
         ),
       ),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Stack(
+        alignment: Alignment.centerLeft,
         children: [
-          // Logo Section
-          Image.asset(
-            'assets/images/logo.png',
-            height: 150, // Increased logo size
-            width: 150,
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-            // errorBuilder: (context, error, stackTrace) => const Row(
-              // children: [
-              //   Icon(Icons.check_box_outlined, color: Color(0xFF4CAF50), size: 38), // Increased icon size
-              //   SizedBox(width: 8),
-              //   Text(
-              //     'KrishiDealer',
-              //     style: TextStyle(
-              //       fontWeight: FontWeight.bold,
-              //       fontSize: 24, // Increased font size
-              //       color: Color(0xFF4CAF50),
-              //       letterSpacing: -0.5,
-              //     ),
-              //   ),
-              // ],
-            // ),
-          ),
-          const Spacer(),
-          
-          // Search Field
-          Container(
-            width: 400, // Slightly reduced width to prevent overflow
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const TextField(
-              decoration: InputDecoration(
-                hintText: 'Search anything here...',
-                hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
-                prefixIcon: Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 11),
+          // 1. Search Bar (Fixed LEFT offset)
+          Positioned(
+            left: 100, // Distance from sidebar edge = EXACT 100px
+            child: Container(
+              width: 520, // EXACT width
+              height: 38, // EXACT height
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(38), // Pill radius
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const TextField(
+                textAlignVertical: TextAlignVertical.center,
+                style: TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search anything here...',
+                  hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
+                  ),
+                  prefixIconConstraints: BoxConstraints(minWidth: 52),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
               ),
             ),
           ),
-          
-          const Spacer(),
-          
-          // Actions Section
-          SizedBox(
-            width: 320, // Increased width to prevent internal overflow
+
+          // 2. Right Side Icons (Aligned Right)
+          Positioned(
+            right: 0,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildIconButton(
-                  icon: Icons.notifications_none_outlined,
-                  hasBadge: true,
-                ),
-                const SizedBox(width: 8),
-                _buildIconButton(icon: Icons.mail_outline),
-                const SizedBox(width: 8),
-                _buildIconButton(icon: Icons.person_outline),
-                const SizedBox(width: 16),
-                const VerticalDivider(width: 1, indent: 20, endIndent: 20, color: Color(0xFFE5E7EB)),
-                const SizedBox(width: 16),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFE5E7EB), width: 2),
-                      ),
-                      child: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Color(0xFFF3F4F6),
-                        backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=admin'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Admin',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Color(0xFF111827),
+                // Notification Icon
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(Icons.notifications_none_outlined, color: Color(0xFF4B5563), size: 22),
+                      Positioned(
+                        top: 9,
+                        right: 9,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppTheme.error,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                         ),
-                        Row(
-                          children: [
-                            Text(
-                              'Super Admin',
-                              style: TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
-                            ),
-                            Icon(Icons.keyboard_arrow_down, size: 12, color: Color(0xFF6B7280)),
-                          ],
-                        ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Real Profile Image
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
+                    image: const DecorationImage(
+                      image: NetworkImage('https://i.pravatar.cc/150?u=kd_admin_panel_final'),
+                      fit: BoxFit.cover,
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildIconButton({required IconData icon, bool hasBadge = false}) {
-    return Stack(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
-          ),
-          child: Icon(icon, color: const Color(0xFF4B5563), size: 20),
-        ),
-        if (hasBadge)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }
