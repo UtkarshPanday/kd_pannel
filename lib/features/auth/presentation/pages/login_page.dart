@@ -19,10 +19,19 @@ class _LoginPageState extends State<LoginPage> {
   bool _isPersistentSession = true;
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Pre-cache the logo to ensure it's instant on the next frame
+    // Pre-cache core assets to ensure they load instantly on transition
     precacheImage(const AssetImage('assets/images/logo_copy.png'), context);
+    precacheImage(const AssetImage('assets/images/logo.png'), context);
+    precacheImage(const AssetImage('assets/images/admin.png'), context);
   }
 
   void _handleLogin(UserRole role) {
@@ -374,8 +383,7 @@ class _LoginPageState extends State<LoginPage> {
                           icon: Icons.alternate_email_rounded,
                           isDark: !isDesktop,
                         ),
-                        SizedBox(height: isDesktop ? 16 : 12), // Clean spacing
-
+                        SizedBox(height: isDesktop ? 16 : 12),
                         FocusableAdvancedField(
                           controller: _passwordController,
                           hint: 'Security Token',

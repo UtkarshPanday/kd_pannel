@@ -17,9 +17,7 @@ class TopbarWidget extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: AppTheme.cardColor,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
       ),
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 24),
       child: Row(
@@ -29,7 +27,11 @@ class TopbarWidget extends StatelessWidget {
           if (!isDesktop) ...[
             IconButton(
               onPressed: onMenuPressed,
-              icon: Icon(Icons.menu, color: const Color(0xFF4B5563), size: isMobile ? 22 : 24),
+              icon: Icon(
+                Icons.menu,
+                color: const Color(0xFF4B5563),
+                size: isMobile ? 22 : 24,
+              ),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
@@ -47,7 +49,9 @@ class TopbarWidget extends StatelessWidget {
                   color: const Color(0xFF9CA3AF),
                   fontSize: isMobile ? 12 : 13,
                 ),
-                prefixInsets: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 14),
+                prefixInsets: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 10 : 14,
+                ),
                 itemColor: const Color(0xFF9CA3AF),
                 style: TextStyle(fontSize: isMobile ? 13 : 14),
                 decoration: BoxDecoration(
@@ -76,7 +80,11 @@ class TopbarWidget extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Icon(Icons.notifications_none_outlined, color: const Color(0xFF4B5563), size: isMobile ? 20 : 22),
+                    Icon(
+                      Icons.notifications_none_outlined,
+                      color: const Color(0xFF4B5563),
+                      size: isMobile ? 20 : 22,
+                    ),
                     Positioned(
                       top: isMobile ? 8 : 10,
                       right: isMobile ? 8 : 10,
@@ -100,9 +108,14 @@ class TopbarWidget extends StatelessWidget {
                 height: isMobile ? 34 : 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE5E7EB), width: isMobile ? 1.5 : 2),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/admin.png'),
+                  border: Border.all(
+                    color: const Color(0xFFE5E7EB),
+                    width: isMobile ? 1.5 : 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/admin.png',
                     fit: BoxFit.cover,
                   ),
                 ),

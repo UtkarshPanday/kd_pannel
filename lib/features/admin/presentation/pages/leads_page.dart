@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kd_pannel/app_theme.dart';
 import 'package:kd_pannel/core/responsive/responsive.dart';
+import 'package:kd_pannel/core/services/dashboard_service.dart';
+import 'package:kd_pannel/features/shared/widgets/stat_card_widget.dart';
 import 'package:kd_pannel/util/leads.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
@@ -17,6 +19,12 @@ class _LeadsPageState extends State<LeadsPage> {
   String selectedFilterChip = 'All';
   int currentPage = 1;
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   final List<String> dropdownOptions = [
     'Last 1 Week',
@@ -151,87 +159,42 @@ class _LeadsPageState extends State<LeadsPage> {
     final bool isDesktop = Responsive.isDesktop(context);
     final bool isMobile = Responsive.isMobile(context);
 
-    return Material(
-      color: Colors.white,
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: isMobile ? 16 : 24,
-          right: isMobile ? 16 : 24,
-          top: 0,
-          bottom: 20,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    isMobile ? 'Leads' : 'Leads Management',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF4B5563),
-                    ),
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 24 : 16,
+        vertical: isDesktop ? 16 : 12,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isMobile ? 'Leads' : 'Leads Management',
+                  style: TextStyle(
+                    fontSize: isDesktop ? 20 : 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
                   ),
-                  _buildTimeframeRow(isMobile),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _StatGridRow(
-                count: isDesktop ? 6 : 2,
-                items: [
-                  {
-                    'title': 'Unassigned Lead',
-                    'value': '10',
-                    'image': 'assets/images/New leads.png',
-                    'color': AppTheme.warning,
-                  },
-                  {
-                    'title': 'Assigned Lead',
-                    'value': '10',
-                    'image': 'assets/images/Total dealer.png',
-                    'color': AppTheme.info,
-                  },
-                  {
-                    'title': 'KYC Pending',
-                    'value': '10',
-                    'image': 'assets/images/order today.png',
-                    'color': AppTheme.error,
-                  },
-                  {
-                    'title': 'KYC Confirm',
-                    'value': '10',
-                    'image': 'assets/images/Revenue.png',
-                    'color': AppTheme.success,
-                  },
-                  {
-                    'title': 'Order Pending',
-                    'value': '10',
-                    'image': 'assets/images/order today.png',
-                    'color': AppTheme.warning,
-                  },
-                  {
-                    'title': 'Order Confirm',
-                    'value': '10',
-                    'image': 'assets/images/Revenue.png',
-                    'color': AppTheme.lightGreen,
-                  },
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildFilterChips(isMobile),
-              const SizedBox(height: 16),
-              _LeadsTableCard(
-                leads: filteredLeads,
-                totalEntries: filteredLeads.length,
-                isMobile: isMobile,
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+                ),
+                _buildTimeframeRow(isMobile),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const _LeadsStatsGrid(),
+            const SizedBox(height: 16),
+            _buildFilterChips(isMobile),
+            const SizedBox(height: 12),
+            _LeadsTableCard(
+              leads: filteredLeads,
+              totalEntries: filteredLeads.length,
+              isMobile: isMobile,
+            ),
+            const SizedBox(height: 12),
+          ],
         ),
       ),
     );
@@ -1048,160 +1011,131 @@ class _HeaderText extends StatelessWidget {
   }
 }
 
-class _StatGridRow extends StatelessWidget {
-  final int count;
-  final List<Map<String, dynamic>> items;
-
-  const _StatGridRow({required this.count, required this.items});
+class _LeadsStatsGrid extends StatelessWidget {
+  const _LeadsStatsGrid();
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop = Responsive.isDesktop(context);
+    final service = DashboardService();
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = isDesktop ? 16.0 : 12.0;
-        if (isDesktop) {
-          return Row(
-            children: items.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: index == items.length - 1 ? 0 : spacing,
-                  ),
-                  child: _StatCard(
-                    title: item['title'] as String,
-                    value: item['value'] as String,
-                    image: item['image'] as String,
-                    color: item['color'] as Color,
-                  ),
-                ),
-              );
-            }).toList(),
-          );
+        final double spacing = AppTheme.spacingSmall;
+        final int columns;
+        if (constraints.maxWidth >= 1200) {
+          columns = 6;
+        } else if (constraints.maxWidth >= 768) {
+          columns = 3;
+        } else {
+          columns = 2; // Mobile
         }
-        final width = (constraints.maxWidth - (spacing * (count - 1))) / count;
+
+        final double width =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
-          children: items
-              .map(
-                (item) => _StatCard(
-                  width: width.clamp(140.0, double.infinity),
-                  title: item['title'] as String,
-                  value: item['value'] as String,
-                  image: item['image'] as String,
-                  color: item['color'] as Color,
-                ),
-              )
-              .toList(),
+          children: [
+            FutureBuilder<String>(
+              future: service.getLeadsUnassigned(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'Unassigned Lead',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/New leads.png',
+                  color: AppTheme.warning,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getLeadsAssigned(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'Assigned Lead',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/Active dealer .png',
+                  color: AppTheme.info,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getLeadsKycPending(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'KYC Pending',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/order pending.png',
+                  color: AppTheme.error,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getLeadsKycConfirm(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'KYC Confirm',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/dealer onbord.png',
+                  color: AppTheme.success,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getLeadsOrderPending(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'Order Pending',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/order status.png',
+                  color: AppTheme.warning,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getLeadsOrderConfirm(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'Order Confirm',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/order today.png',
+                  color: AppTheme.lightGreen,
+                  isCompact: true,
+                );
+              },
+            ),
+          ],
         );
       },
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final double? width;
-  final String title;
-  final String value;
-  final String image;
-  final Color color;
-
-  const _StatCard({
-    this.width,
-    required this.title,
-    required this.value,
-    required this.image,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isMobile = Responsive.isMobile(context);
-    return Container(
-      width: width,
-      height: isMobile ? 140 : 150,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(isMobile ? 18 : 20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: isMobile ? 14 : 20,
-            spreadRadius: isMobile ? 1 : 2,
-            offset: Offset(0, isMobile ? 4 : 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(isMobile ? 18 : 20),
-            ),
-            child: Container(
-              height: isMobile ? 65 : 70,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [color.withOpacity(0.15), color.withOpacity(0.01)],
-                ),
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.elliptical(
-                    isMobile ? 100 : 120,
-                    isMobile ? 25 : 35,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: isMobile ? 16 : 18,
-            child: SizedBox(
-              width: isMobile ? 32 : 36,
-              height: isMobile ? 32 : 36,
-              child: Image.asset(
-                image,
-                color: color,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.leaderboard,
-                  color: color,
-                  size: isMobile ? 24 : 28,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: isMobile ? 12 : 14,
-            child: Column(
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: isMobile ? 10 : 11,
-                    color: const Color(0xFF6B7280),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: isMobile ? 2 : 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: isMobile ? 18 : 20,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1F2937),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

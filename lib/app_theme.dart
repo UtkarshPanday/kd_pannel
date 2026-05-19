@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Colors
@@ -71,38 +72,139 @@ class AppTheme {
   static const double borderRadiusLarge = 16.0;
   static const double borderRadiusXLarge = 20.0;
 
-  // Text Styles
-  static const TextStyle heading = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
+  // ---------------------------------------------------------------------------
+  // Typography — single source of truth for the entire app.
+  // All text styles use Outfit via the global textTheme. Use these tokens
+  // everywhere instead of calling GoogleFonts.outfit(...) ad-hoc.
+  // ---------------------------------------------------------------------------
+
+  // Display / Hero
+  static TextStyle get displayLarge => GoogleFonts.outfit(
+    fontSize: 32,
+    fontWeight: FontWeight.w900,
+    color: textPrimary,
+  );
+  static TextStyle get displayMedium => GoogleFonts.outfit(
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
     color: textPrimary,
   );
 
-  static const TextStyle subHeading = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
+  // Headings
+  static TextStyle get headingXL => GoogleFonts.outfit(
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+    color: textPrimary,
+  );
+  static TextStyle get headingLG => GoogleFonts.outfit(
+    fontSize: 18,
+    fontWeight: FontWeight.w800,
+    color: textPrimary,
+  );
+  static TextStyle get headingMD => GoogleFonts.outfit(
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    color: textPrimary,
+  );
+  static TextStyle get headingSM => GoogleFonts.outfit(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
     color: textPrimary,
   );
 
-  static const TextStyle body = TextStyle(
-    fontSize: 14,
+  // Body
+  static TextStyle get bodyLG => GoogleFonts.outfit(
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
     color: textBody,
+  );
+  static TextStyle get bodyMD => GoogleFonts.outfit(
+    fontSize: 13,
     fontWeight: FontWeight.w500,
+    color: textBody,
+  );
+  static TextStyle get bodySM => GoogleFonts.outfit(
+    fontSize: 11.5,
+    fontWeight: FontWeight.w500,
+    color: textBody,
   );
 
-  static const TextStyle caption = TextStyle(
-    fontSize: 12,
+  // Labels / UI
+  static TextStyle get labelLG => GoogleFonts.outfit(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
     color: textSecondary,
-    fontWeight: FontWeight.w500,
   );
+  static TextStyle get labelMD => GoogleFonts.outfit(
+    fontSize: 11.5,
+    fontWeight: FontWeight.w600,
+    color: textSecondary,
+  );
+  static TextStyle get labelSM => GoogleFonts.outfit(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    color: textSecondary,
+  );
+
+  // Values / Stats (big numbers)
+  static TextStyle get statValue => GoogleFonts.outfit(
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+    color: textPrimary,
+  );
+  static TextStyle get statValueSM => GoogleFonts.outfit(
+    fontSize: 18,
+    fontWeight: FontWeight.w800,
+    color: textPrimary,
+  );
+
+  // Caption / Hint
+  static TextStyle get hint => GoogleFonts.outfit(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: textSecondary,
+  );
+
+  // Button
+  static TextStyle get button => GoogleFonts.outfit(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: Colors.white,
+  );
+
+  // Table header / column
+  static TextStyle get tableHeader => GoogleFonts.outfit(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    color: textSecondary,
+    letterSpacing: 0.5,
+  );
+  static TextStyle get tableCell => GoogleFonts.outfit(
+    fontSize: 12.5,
+    fontWeight: FontWeight.w500,
+    color: textBody,
+  );
+
+  // Legacy aliases — keep these so existing const TextStyle refs still compile
+  static TextStyle get heading => headingXL;
+  static TextStyle get subHeading => headingMD;
+  static TextStyle get body => bodyMD;
+  static TextStyle get caption => hint;
 
   static ThemeData get lightTheme {
+    // Outfit is our single brand font. GoogleFonts.outfitTextTheme() applies it
+    // to every Flutter TextTheme slot, so even raw Text() widgets without an
+    // explicit style automatically render in Outfit.
+    final TextTheme outfitTextTheme = GoogleFonts.outfitTextTheme(
+      ThemeData.light().textTheme,
+    );
+
     return ThemeData(
       useMaterial3: true,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: Colors.white,
       cardColor: cardColor,
-      fontFamily: 'Open Sans',
+      textTheme: outfitTextTheme,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         primary: primaryColor,
@@ -110,13 +212,16 @@ class AppTheme {
         background: backgroundColor,
         error: error,
       ),
-      textTheme: const TextTheme(
-        headlineLarge: heading,
-        titleMedium: subHeading,
-        bodyMedium: body,
-        bodySmall: caption,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: NoTransitionsBuilder(),
+          TargetPlatform.iOS: NoTransitionsBuilder(),
+          TargetPlatform.windows: NoTransitionsBuilder(),
+          TargetPlatform.macOS: NoTransitionsBuilder(),
+          TargetPlatform.linux: NoTransitionsBuilder(),
+          TargetPlatform.fuchsia: NoTransitionsBuilder(),
+        },
       ),
-      dividerTheme: const DividerThemeData(color: borderColor, thickness: 1),
     );
   }
 
@@ -136,4 +241,19 @@ class AppTheme {
       offset: const Offset(0, 4),
     ),
   ];
+}
+
+class NoTransitionsBuilder extends PageTransitionsBuilder {
+  const NoTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T>? route,
+    BuildContext? context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return child;
+  }
 }

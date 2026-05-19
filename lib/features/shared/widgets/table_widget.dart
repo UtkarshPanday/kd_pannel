@@ -28,27 +28,17 @@ class TableWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
+              Text(title, style: AppTheme.headingMD),
               InkWell(
                 onTap: () {},
-                child: const Row(
+                child: Row(
                   children: [
-                    Text(
-                      'View All',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Text('View All', style: AppTheme.hint),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: AppTheme.textSecondary,
                     ),
-                    Icon(Icons.chevron_right, size: 16, color: Colors.grey),
                   ],
                 ),
               ),
@@ -61,55 +51,74 @@ class TableWidget extends StatelessWidget {
     );
   }
 
+  /// Returns true for columns whose cells render a fixed-size badge or button.
+  bool _isCompactColumn(int index) {
+    // Check the header name
+    final header = columns[index].toLowerCase();
+    if (header == 'status') return true;
+    // Also treat any column where every row cell is a badge/button value
+    final badgeValues = {'Completed', 'Pending', 'FOLLOW_UP_BTN'};
+    return rows.isNotEmpty &&
+        rows.every(
+          (row) => index < row.length && badgeValues.contains(row[index]),
+        );
+  }
+
   Widget _buildTable(BuildContext context) {
     final bool isDesktop = MediaQuery.of(context).size.width >= 1200;
 
+    // Build column widths: compact columns (Status, button cols) get
+    // IntrinsicColumnWidth so they shrink to content; others flex equally.
+    final Map<int, TableColumnWidth> colWidths = {
+      for (int i = 0; i < columns.length; i++)
+        i: _isCompactColumn(i)
+            ? const IntrinsicColumnWidth()
+            : const FlexColumnWidth(1),
+    };
+
     Widget table = Table(
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      columnWidths: colWidths,
       children: [
         // Header Row
         TableRow(
           decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppTheme.lightBorderColor)),
+            border: Border(
+              bottom: BorderSide(color: AppTheme.lightBorderColor),
+            ),
           ),
           children: columns
-              .map((col) => Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: AppTheme.spacingXSmall,
-                    ),
-                    child: Text(
-                      col,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ))
-              .toList(),
-        ),
-        // Data Rows
-        ...rows.map((row) => TableRow(
-              children: row.asMap().entries.map((entry) {
-                final index = entry.key;
-                final cell = entry.value;
-
-                return Padding(
+              .map(
+                (col) => Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 10,
                     horizontal: AppTheme.spacingXSmall,
                   ),
-                  child: _buildCell(index, cell),
-                );
-              }).toList(),
-            )),
+                  child: Text(col, style: AppTheme.tableHeader),
+                ),
+              )
+              .toList(),
+        ),
+        // Data Rows
+        ...rows.map(
+          (row) => TableRow(
+            children: row.asMap().entries.map((entry) {
+              final index = entry.key;
+              final cell = entry.value;
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: AppTheme.spacingXSmall,
+                ),
+                child: _buildCell(index, cell),
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
 
-    if (isDesktop) {
-      return table;
-    }
+    if (isDesktop) return table;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -133,35 +142,35 @@ class TableWidget extends StatelessWidget {
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
-        child: const Text(
-          'Follow Up',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-        ),
+        child: Text('Follow Up', style: AppTheme.button),
       );
     }
 
     if (cell == 'Completed' || cell == 'Pending') {
       final isCompleted = cell == 'Completed';
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: isCompleted ? const Color(0xFFECFDF5) : const Color(0xFFFFF7ED),
-          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-        ),
-        child: Text(
-          cell,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: isCompleted ? const Color(0xFF059669) : const Color(0xFFD97706),
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? const Color(0xFFECFDF5)
+                : const Color(0xFFFFF7ED),
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          ),
+          child: Text(
+            cell,
+            style: AppTheme.labelSM.copyWith(
+              color: isCompleted
+                  ? const Color(0xFF059669)
+                  : const Color(0xFFD97706),
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       );
     }
 
-    return Text(
-      cell,
-      style: TextStyle(fontSize: 13, color: AppTheme.textBody),
-    );
+    return Text(cell, style: AppTheme.tableCell);
   }
 }

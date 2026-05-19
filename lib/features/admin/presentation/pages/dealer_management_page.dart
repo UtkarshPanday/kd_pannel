@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:kd_pannel/app_theme.dart';
 import 'package:kd_pannel/core/responsive/responsive.dart';
+import 'package:kd_pannel/core/services/dashboard_service.dart';
+import 'package:kd_pannel/features/shared/widgets/stat_card_widget.dart';
 import 'package:kd_pannel/util/dealers.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
@@ -17,6 +19,12 @@ class _DealerManagementPageState extends State<DealerManagementPage> {
   PickerDateRange? _selectedRange;
   int currentPage = 1;
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   // Filter states
   String selectedAgent = 'All Sales Agents';
@@ -114,41 +122,37 @@ class _DealerManagementPageState extends State<DealerManagementPage> {
     final isDesktop = Responsive.isDesktop(context);
     final isMobile = Responsive.isMobile(context);
 
-    return Material(
-      color: Colors.white,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          left: isMobile ? 16 : 32,
-          right: isMobile ? 16 : 32,
-          top: 12,
-          bottom: 24,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(isMobile),
-            const SizedBox(height: 28),
-            _buildStatsCards(context),
-            const SizedBox(height: 32),
-            _buildFiltersRow(isMobile, isDesktop),
-            const SizedBox(height: 24),
-            _buildDealerTable(isMobile),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 24 : 16,
+        vertical: isDesktop ? 16 : 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(isMobile),
+          const SizedBox(height: 16),
+          _buildStatsCards(context),
+          const SizedBox(height: 20),
+          _buildFiltersRow(isMobile, isDesktop),
+          const SizedBox(height: 16),
+          _buildDealerTable(isMobile),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(bool isMobile) {
+    final isDesktop = Responsive.isDesktop(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           isMobile ? 'Dealers' : 'Dealer Management',
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF4B5563),
+          style: TextStyle(
+            fontSize: isDesktop ? 20 : 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
           ),
         ),
         _buildTimeframeFilter(isMobile),
@@ -246,75 +250,85 @@ class _DealerManagementPageState extends State<DealerManagementPage> {
 
   Widget _buildStatsCards(BuildContext context) {
     final isDesktop = Responsive.isDesktop(context);
-    final isMobile = Responsive.isMobile(context);
+    final service = DashboardService();
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = isDesktop ? 24.0 : 16.0;
-        final items = [
-          {
-            'title': 'Total Dealers',
-            'value': '1,245',
-            'image': 'assets/images/Total dealer.png',
-            'color': const Color(0xFF4CAF50),
-          },
-          {
-            'title': 'Active Dealers',
-            'value': '982',
-            'image': 'assets/images/order today.png',
-            'color': const Color(0xFF2196F3),
-          },
-          {
-            'title': 'High Value Dealers',
-            'value': '156',
-            'image': 'assets/images/Revenue.png',
-            'color': const Color(0xFFF59E0B),
-          },
-          {
-            'title': 'Inactive Dealers',
-            'value': '107',
-            'image': 'assets/images/New leads.png',
-            'color': const Color(0xFFEF4444),
-          },
-        ];
+        final double spacing = AppTheme.spacingSmall;
+        final int columns = isDesktop ? 4 : 2;
 
-        if (isDesktop) {
-          return Row(
-            children: items
-                .map(
-                  (item) => Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: item == items.last ? 0 : spacing,
-                      ),
-                      child: _StatCard(
-                        title: item['title'] as String,
-                        value: item['value'] as String,
-                        image: item['image'] as String,
-                        color: item['color'] as Color,
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-          );
-        }
+        final double width =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
 
-        final width = (constraints.maxWidth - spacing) / 2;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
-          children: items
-              .map(
-                (item) => _StatCard(
+          children: [
+            FutureBuilder<String>(
+              future: service.getDealerTotalDealers(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
                   width: width,
-                  title: item['title'] as String,
-                  value: item['value'] as String,
-                  image: item['image'] as String,
-                  color: item['color'] as Color,
-                ),
-              )
-              .toList(),
+                  title: 'Total Dealers',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/Total dealer.png',
+                  color: AppTheme.primaryColor,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getDealerActiveDealers(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'Active Dealers',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/Active dealer .png',
+                  color: AppTheme.success,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getDealerHighValueDealers(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'High Value Dealers',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/sales perfrom.png',
+                  color: AppTheme.warning,
+                  isCompact: true,
+                );
+              },
+            ),
+            FutureBuilder<String>(
+              future: service.getDealerInactiveDealers(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return StatCardShimmer(isCompact: true, width: width);
+                }
+                return StatCardWidget(
+                  width: width,
+                  title: 'Inactive Dealers',
+                  value: snapshot.data ?? '0',
+                  imagePath: 'assets/images/New leads.png',
+                  color: AppTheme.error,
+                  isCompact: true,
+                );
+              },
+            ),
+          ],
         );
       },
     );
@@ -842,101 +856,6 @@ class _StatusBadge extends StatelessWidget {
             letterSpacing: 0.1,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final double? width;
-  final String title;
-  final String value;
-  final String image;
-  final Color color;
-
-  const _StatCard({
-    this.width,
-    required this.title,
-    required this.value,
-    required this.image,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isMobile = Responsive.isMobile(context);
-    return Container(
-      width: width,
-      height: isMobile ? 140 : 170,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(
-          isMobile ? AppTheme.borderRadiusLarge : AppTheme.borderRadiusXLarge,
-        ),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(
-                isMobile
-                    ? AppTheme.borderRadiusLarge
-                    : AppTheme.borderRadiusXLarge,
-              ),
-            ),
-            child: Container(
-              height: isMobile ? 65 : 80,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [color.withOpacity(0.15), color.withOpacity(0.01)],
-                ),
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.elliptical(
-                    isMobile ? 100 : 120,
-                    isMobile ? 25 : 35,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: isMobile ? 16 : 20,
-            child: SizedBox(
-              width: isMobile ? 36 : 42,
-              height: isMobile ? 36 : 42,
-              child: Image.asset(image, color: color, fit: BoxFit.contain),
-            ),
-          ),
-          Positioned(
-            bottom: isMobile ? 12 : 16,
-            child: Column(
-              children: [
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isMobile ? 11 : 12,
-                    color: AppTheme.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: isMobile ? 18 : 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

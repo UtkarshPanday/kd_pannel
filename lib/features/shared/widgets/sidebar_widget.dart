@@ -3,34 +3,38 @@ import 'package:kd_pannel/app_theme.dart';
 import 'package:kd_pannel/core/auth/auth_service.dart';
 
 class SidebarWidget extends StatelessWidget {
-  const SidebarWidget({super.key});
+  final int currentIdx;
+  final ValueChanged<int> onTabSelected;
+  final VoidCallback onLogout;
+
+  const SidebarWidget({
+    super.key,
+    required this.currentIdx,
+    required this.onTabSelected,
+    required this.onLogout,
+  });
 
   static const List<Map<String, dynamic>> _adminMenuItems = [
-    {
-      'icon': Icons.dashboard_rounded,
-      'title': 'Dashboard',
-      'route': '/dashboard',
-    },
-    {'icon': Icons.campaign_rounded, 'title': 'Leads', 'route': '/leads'},
-    {'icon': Icons.storefront_rounded, 'title': 'Dealers', 'route': '/dealers'},
-    {'icon': Icons.support_agent_rounded, 'title': 'Support', 'route': '/support'},
+    {'icon': Icons.dashboard_rounded, 'title': 'Dashboard'},
+    {'icon': Icons.inventory_2_rounded, 'title': 'Products'},
+    {'icon': Icons.campaign_rounded, 'title': 'Leads'},
+    {'icon': Icons.storefront_rounded, 'title': 'Dealers'},
+    {'icon': Icons.support_agent_rounded, 'title': 'Support'},
   ];
 
   static const List<Map<String, dynamic>> _salesMenuItems = [
-    {
-      'icon': Icons.dashboard_rounded,
-      'title': 'Sales Dashboard',
-      'route': '/sales/dashboard',
-    },
-    {'icon': Icons.campaign_rounded, 'title': 'My Leads', 'route': '/leads'},
-    {'icon': Icons.storefront_rounded, 'title': 'My Dealers', 'route': '/dealers'},
+    {'icon': Icons.dashboard_rounded, 'title': 'Sales Dashboard'},
+    {'icon': Icons.inventory_2_rounded, 'title': 'Products'},
+    {'icon': Icons.campaign_rounded, 'title': 'My Leads'},
+    {'icon': Icons.storefront_rounded, 'title': 'My Dealers'},
   ];
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = ModalRoute.of(context)?.settings.name;
     final role = AuthService().currentUserRole ?? UserRole.admin;
-    final menuItems = role == UserRole.admin ? _adminMenuItems : _salesMenuItems;
+    final menuItems = role == UserRole.admin
+        ? _adminMenuItems
+        : _salesMenuItems;
 
     return Container(
       width: 260,
@@ -45,7 +49,7 @@ class SidebarWidget extends StatelessWidget {
           Container(
             height: 70,
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.only(left: 12, right: 12),
             decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
@@ -55,7 +59,8 @@ class SidebarWidget extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 150,
+                width: 180,
+                height: 80,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => const Icon(
                   Icons.storefront_rounded,
@@ -75,7 +80,7 @@ class SidebarWidget extends StatelessWidget {
               itemCount: menuItems.length,
               itemBuilder: (context, index) {
                 final item = menuItems[index];
-                final isActive = currentRoute == item['route'];
+                final isActive = currentIdx == index;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 6),
@@ -83,14 +88,7 @@ class SidebarWidget extends StatelessWidget {
                     icon: item['icon'] as IconData,
                     title: item['title'] as String,
                     isActive: isActive,
-                    onTap: () {
-                      if (currentRoute != item['route']) {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          item['route'] as String,
-                        );
-                      }
-                    },
+                    onTap: () => onTabSelected(index),
                   ),
                 );
               },
@@ -104,10 +102,7 @@ class SidebarWidget extends StatelessWidget {
               icon: Icons.logout_rounded,
               title: 'Logout',
               isActive: false,
-              onTap: () {
-                AuthService().logout();
-                Navigator.pushReplacementNamed(context, '/login');
-              },
+              onTap: onLogout,
             ),
           ),
         ],
@@ -172,4 +167,3 @@ class _SidebarItem extends StatelessWidget {
     );
   }
 }
-
