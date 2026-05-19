@@ -383,9 +383,9 @@ class _CreateProductPageState extends State<CreateProductPage> {
               final rightColumn = Column(
                 children: [
                   _buildSectionCard(
-                    title: 'Publishing Status',
-                    icon: Icons.visibility_outlined,
-                    child: _buildAvailabilitySelector(),
+                    title: 'Product Media',
+                    icon: Icons.image_outlined,
+                    child: _buildMediaUploader(),
                   ),
                   const SizedBox(height: 24),
                   _buildSectionCard(
@@ -413,9 +413,9 @@ class _CreateProductPageState extends State<CreateProductPage> {
                   ),
                   const SizedBox(height: 24),
                   _buildSectionCard(
-                    title: 'Product Media',
-                    icon: Icons.image_outlined,
-                    child: _buildMediaUploader(),
+                    title: 'Publishing Status',
+                    icon: Icons.visibility_outlined,
+                    child: _buildAvailabilitySelector(),
                   ),
                 ],
               );
